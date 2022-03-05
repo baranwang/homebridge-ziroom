@@ -44,7 +44,7 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig & ZiroomPlatformConfig,
-    public readonly api: API
+    public readonly api: API,
   ) {
     this.log.debug('Finished initializing platform:', this.config.name);
 
@@ -60,7 +60,7 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
       this.request<{ hid: string }[]>(API_URL.getHomeList, { uid }).then(
         (res) => {
           this.config.hid = res[0].hid;
-        }
+        },
       );
     }
 
@@ -95,7 +95,7 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
       {
         uid: this.config.uid,
         version: 21,
-      }
+      },
     ).catch(() => ({ allRoomDeviceWrapper: [] } as Ziroom.DeviceList));
 
     allRoomDeviceWrapper = allRoomDeviceWrapper.flatMap((item) => {
@@ -124,7 +124,7 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
       const uuid = this.api.hap.uuid.generate(device.devUuid);
 
       const existingAccessory = this.accessories.find(
-        (accessory) => accessory.UUID === uuid
+        (accessory) => accessory.UUID === uuid,
       );
 
       let AccessoryClass: typeof ZiroomPlatformAccessory | null = null;
@@ -135,23 +135,26 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
           break;
         case 'conditioner':
           AccessoryClass = ZiroomConditioner;
+          break;
         default:
           break;
       }
 
-      if (!AccessoryClass) continue;
+      if (!AccessoryClass) {
+        continue;
+      }
 
       if (existingAccessory) {
         this.log.info(
           'Restoring existing accessory from cache:',
-          existingAccessory.displayName
+          existingAccessory.displayName,
         );
         new AccessoryClass(this, existingAccessory);
       } else {
         this.log.info('Adding new accessory:', device.devName);
         const accessory = new this.api.platformAccessory<Device>(
           `${device.rname} - ${device.devName}`,
-          uuid
+          uuid,
         );
         accessory.context.device = device;
 

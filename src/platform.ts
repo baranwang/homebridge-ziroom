@@ -1,34 +1,73 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import {
+  API,
+  DynamicPlatformPlugin,
+  Logger,
+  PlatformAccessory,
+  PlatformConfig,
+  Service,
+  Characteristic,
+} from 'homebridge';
+import jwtDecode from 'jwt-decode';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { ExamplePlatformAccessory } from './platformAccessory';
+import {
+  ZiroomConditioner,
+  ZiroomPlatformAccessory,
+  ZiroomSwitch,
+} from './accessory';
+import { API_URL, request } from './util';
 
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
-export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
+export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
-  public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
+  public readonly Characteristic: typeof Characteristic =
+    this.api.hap.Characteristic;
 
   // this is used to track restored cached accessories
-  public readonly accessories: PlatformAccessory[] = [];
+  public readonly accessories: PlatformAccessory<Device>[] = [];
+
+  public request<T = any>(url: string, data: Record<string, any>) {
+    return request<T>(url, data, this.config.token!).then((res) => {
+      if (res.code === '200') {
+        return res.data;
+      } else {
+        this.log.error(res.message);
+        throw new Error(res.message);
+      }
+    });
+  }
 
   constructor(
     public readonly log: Logger,
-    public readonly config: PlatformConfig,
-    public readonly api: API,
+    public readonly config: PlatformConfig & ZiroomPlatformConfig,
+    public readonly api: API
   ) {
     this.log.debug('Finished initializing platform:', this.config.name);
 
-    // When this event is fired it means Homebridge has restored all cached accessories from disk.
-    // Dynamic Platform plugins should only register new accessories after this event was fired,
-    // in order to ensure they weren't added to homebridge already. This event can also be used
-    // to start discovery of new accessories.
+    if (!this.config.token) {
+      this.log.error('No token provided');
+      return;
+    }
+
+    const { uid } = jwtDecode(this.config.token) as any;
+    this.config.uid = uid;
+
+    if (!this.config.hid) {
+      this.request<{ hid: string }[]>(API_URL.getHomeList, { uid }).then(
+        (res) => {
+          this.config.hid = res[0].hid;
+        }
+      );
+    }
+
+    this.log.info('Platform config:', this.config);
+
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
-      // run the method to discover / register your devices as accessories
       this.discoverDevices();
     });
   }
@@ -37,7 +76,7 @@ export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
    * This function is invoked when homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
-  configureAccessory(accessory: PlatformAccessory) {
+  configureAccessory(accessory: PlatformAccessory<Device>) {
     this.log.info('Loading accessory from cache:', accessory.displayName);
 
     // add the restored accessory to the accessories cache so we can track if it has already been registered
@@ -49,67 +88,77 @@ export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  discoverDevices() {
-
-    // EXAMPLE ONLY
-    // A real plugin you would discover accessories from the local network, cloud services
-    // or a user-defined array in the platform config.
-    const exampleDevices = [
+  async discoverDevices() {
+    this.log.info('Discovering devices...');
+    let { allRoomDeviceWrapper } = await this.request<Ziroom.DeviceList>(
+      API_URL.getDeviceList,
       {
-        exampleUniqueId: 'ABCD',
-        exampleDisplayName: 'Bedroom',
-      },
-      {
-        exampleUniqueId: 'EFGH',
-        exampleDisplayName: 'Kitchen',
-      },
-    ];
+        uid: this.config.uid,
+        version: 21,
+      }
+    ).catch(() => ({ allRoomDeviceWrapper: [] } as Ziroom.DeviceList));
 
-    // loop over the discovered devices and register each one if it has not already been registered
-    for (const device of exampleDevices) {
+    allRoomDeviceWrapper = allRoomDeviceWrapper.flatMap((item) => {
+      if (item.devTypeId === 'switch' && item.modelCode === 'touchswitch02') {
+        return [
+          {
+            ...item,
+            devUuid: `${item.devUuid}-l`,
+            groupInfoMap: {
+              set_on_off: item.groupInfoMap.set_on_off_l,
+            },
+          },
+          {
+            ...item,
+            devUuid: `${item.devUuid}-r`,
+            groupInfoMap: {
+              set_on_off: item.groupInfoMap.set_on_off_r,
+            },
+          },
+        ] as Ziroom.Device[];
+      }
+      return item;
+    });
 
-      // generate a unique id for the accessory this should be generated from
-      // something globally unique, but constant, for example, the device serial
-      // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.exampleUniqueId);
+    for (const device of allRoomDeviceWrapper) {
+      const uuid = this.api.hap.uuid.generate(device.devUuid);
 
-      // see if an accessory with the same uuid has already been registered and restored from
-      // the cached devices we stored in the `configureAccessory` method above
-      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+      const existingAccessory = this.accessories.find(
+        (accessory) => accessory.UUID === uuid
+      );
+
+      let AccessoryClass: typeof ZiroomPlatformAccessory | null = null;
+
+      switch (device.devTypeId) {
+        case 'switch':
+          AccessoryClass = ZiroomSwitch;
+          break;
+        case 'conditioner':
+          AccessoryClass = ZiroomConditioner;
+        default:
+          break;
+      }
+
+      if (!AccessoryClass) continue;
 
       if (existingAccessory) {
-        // the accessory already exists
-        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
-
-        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-        // existingAccessory.context.device = device;
-        // this.api.updatePlatformAccessories([existingAccessory]);
-
-        // create the accessory handler for the restored accessory
-        // this is imported from `platformAccessory.ts`
-        new ExamplePlatformAccessory(this, existingAccessory);
-
-        // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-        // remove platform accessories when no longer present
-        // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
-        // this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
+        this.log.info(
+          'Restoring existing accessory from cache:',
+          existingAccessory.displayName
+        );
+        new AccessoryClass(this, existingAccessory);
       } else {
-        // the accessory does not yet exist, so we need to create it
-        this.log.info('Adding new accessory:', device.exampleDisplayName);
-
-        // create a new accessory
-        const accessory = new this.api.platformAccessory(device.exampleDisplayName, uuid);
-
-        // store a copy of the device object in the `accessory.context`
-        // the `context` property can be used to store any data about the accessory you may need
+        this.log.info('Adding new accessory:', device.devName);
+        const accessory = new this.api.platformAccessory<Device>(
+          `${device.rname} - ${device.devName}`,
+          uuid
+        );
         accessory.context.device = device;
 
-        // create the accessory handler for the newly create accessory
-        // this is imported from `platformAccessory.ts`
-        new ExamplePlatformAccessory(this, accessory);
-
-        // link the accessory to your platform
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        new AccessoryClass(this, accessory);
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+          accessory,
+        ]);
       }
     }
   }

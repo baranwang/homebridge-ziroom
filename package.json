@@ -1,9 +1,8 @@
 {
-  "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
-  "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "displayName": "Homebridge Ziroom Platform",
+  "name": "homebridge-ziroom",
+  "version": "0.0.0",
+  "description": "自如智能硬件 Homebridge 插件",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -24,11 +23,20 @@
     "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "homekit",
+    "ziroom",
+    "自如"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "jwt-decode": "^3.1.2",
+    "node-fetch": "^2.6.7",
+    "uuid": "^8.3.2"
+  },
   "devDependencies": {
     "@types/node": "^16.10.9",
+    "@types/node-fetch": "^2.6.1",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "eslint": "^8.0.1",

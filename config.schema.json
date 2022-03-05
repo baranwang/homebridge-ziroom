@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "ziroom",
   "pluginType": "platform",
   "singular": true,
   "schema": {
@@ -9,7 +9,17 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "Ziroom"
+      },
+      "token": {
+        "title": "Token",
+        "type": "string",
+        "required": true
+      },
+      "hid": {
+        "title": "HID",
+        "type": "string",
+        "required": false
       }
     }
   }

@@ -6,10 +6,10 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "git://github.com/baranwang/homebridge-ziroom.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/baranwang/homebridge-ziroom/issues"
   },
   "engines": {
     "node": ">=14.18.1",

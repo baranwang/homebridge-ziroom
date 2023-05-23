@@ -34,12 +34,6 @@ export class ZiroomLight03 extends ZiroomPlatformAccessory {
     this.platform.Characteristic.ColorTemperature.MaximumTransmitPower;
   }
 
-  get devConfig() {
-    return this.platform.config.devConfig?.[
-      this.accessory.context.device.devUuid
-    ];
-  }
-
   private async getDeviceProperty(
     property: Ziroom.Actions,
     options?: IOptions,

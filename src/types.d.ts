@@ -33,7 +33,13 @@ declare namespace Ziroom {
     rname: string;
     rid: string;
     isOnline: 0 | 1;
-    modelCode: 'touchswitch01' | 'touchswitch02' | 'light03' | 'curtain01' | 'conditioner02' | 'bathroommaster01';
+    modelCode:
+      | 'touchswitch01'
+      | 'touchswitch02'
+      | 'light03'
+      | 'curtain01'
+      | 'conditioner02'
+      | 'bathroommaster01';
     devName: string;
     devUuid: string;
     modelName: string;
@@ -62,4 +68,5 @@ interface ZiroomPlatformConfig {
   token?: string;
   uid?: string;
   hid?: string;
+  devConfig?: Record<string, Record<'reverseColorTem', any>>;
 }

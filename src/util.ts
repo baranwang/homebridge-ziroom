@@ -33,9 +33,7 @@ export function request<T>(url: string, body: any, token: string) {
       'User-Agent': 'ZJProject/1.2.2 (iPhone; iOS 15.4; Scale/3.00)',
       Sys: 'app',
       'Client-Version': '1.2.2',
-      'Request-Id': `${uuidv4().substring(0, 8).toUpperCase()}:${(
-        timestamp / 1000
-      ).toFixed(0)}`,
+      'Request-Id': `${uuidv4().substring(0, 8).toUpperCase()}:${(timestamp / 1000).toFixed(0)}`,
       timestamp: `${timestamp}`,
       'Content-Type': 'application/json',
       'Client-Type': 'ios',
@@ -56,4 +54,27 @@ export const API_URL = {
   getDevBaseInfo: 'homeapi/v2/device/queryDevBaseInfo',
   getDeviceDetail: 'homeapi/v3/device/deviceDetailPage',
   setDeviceByOperCode: 'homeapi/v2/device/controlDeviceByOperCode',
+};
+
+export const transformRange = (devElement: Pick<Ziroom.DevElement, 'minValue' | 'maxValue'>, hbRange: [number, number]) => {
+  const convert = (value: number, sourceRange: [number, number], targetRange: [number, number]) => {
+    const [sourceMin, sourceMax] = sourceRange;
+    const [targetMin, targetMax] = targetRange;
+
+    if (value <= sourceMin) {
+      return targetMin;
+    }
+    if (value >= sourceMax) {
+      return targetMax;
+    }
+    const percentage = (value - sourceMin) / (sourceMax - sourceMin);
+    return targetMin + percentage * (targetMax - targetMin);
+  };
+
+  const ziroomRange: [number, number] = [devElement.minValue, devElement.maxValue];
+
+  return {
+    hb2ziroom: (value: number) => convert(value, hbRange, ziroomRange),
+    ziroom2hb: (value: number) => convert(value, ziroomRange, hbRange),
+  };
 };

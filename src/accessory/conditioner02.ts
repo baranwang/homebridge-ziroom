@@ -3,15 +3,14 @@ import { ZiroomPlatformAccessory } from './base';
 import { ZiroomHomebridgePlatform } from '../platform';
 import { API_URL } from '../util';
 
-export class ZiroomConditioner extends ZiroomPlatformAccessory {
+export class ZiroomConditioner02 extends ZiroomPlatformAccessory {
   constructor(
     readonly platform: ZiroomHomebridgePlatform,
-    readonly accessory: PlatformAccessory<Device>
+    readonly accessory: PlatformAccessory<Device>,
   ) {
     super(platform, accessory);
 
     const {
-      Name,
       CurrentHeatingCoolingState,
       CurrentTemperature,
       CurrentRelativeHumidity,
@@ -20,36 +19,31 @@ export class ZiroomConditioner extends ZiroomPlatformAccessory {
       TemperatureDisplayUnits,
     } = this.platform.Characteristic;
 
-    this.service =
-      this.accessory.getService(this.platform.Service.Thermostat) ||
-      this.accessory.addService(this.platform.Service.Thermostat);
+    this.generateService([this.platform.Service.Thermostat]);
 
-    this.service.setCharacteristic(Name, accessory.context.device.devName);
-
-    this.service
+    this.services[0]
       .getCharacteristic(CurrentHeatingCoolingState)
       .onGet(this.getCurrentHeatingCoolingState.bind(this));
 
-    this.service
+    this.services[0]
       .getCharacteristic(TargetHeatingCoolingState)
       .onSet(this.setTargetHeatingCoolingState.bind(this))
       .onGet(this.getTargetHeatingCoolingState.bind(this));
 
-    this.service
+    this.services[0]
       .getCharacteristic(CurrentTemperature)
       .onGet(this.getCurrentTemperature.bind(this));
 
-    this.service
+    this.services[0]
       .getCharacteristic(TargetTemperature)
       .onSet(this.setTargetTemperature.bind(this))
       .onGet(this.getTargetTemperature.bind(this));
 
-    this.service
+    this.services[0]
       .getCharacteristic(TemperatureDisplayUnits)
-
       .onGet(this.getTemperatureDisplayUnits.bind(this));
 
-    this.service
+    this.services[0]
       .getCharacteristic(CurrentRelativeHumidity)
       .onGet(this.getCurrentRelativeHumidity.bind(this));
   }
@@ -103,16 +97,18 @@ export class ZiroomConditioner extends ZiroomPlatformAccessory {
         device.groupInfoMap.set_on_off.devElementList.find(
           (item) =>
             item.elementCode ===
-            (mode === null ? 'conditioner_off_detail' : 'conditioner_on_detail')
-        )!
+            (mode === null ? 'conditioner_off_detail' : 'conditioner_on_detail'),
+        )!,
       );
     }
 
     if (mode !== null) {
       const devElement = device.groupInfoMap.set_mode.devElementList.find(
-        (item) => item.value === `${mode}`
+        (item) => item.value === `${mode}`,
       );
-      if (!devElement) return;
+      if (!devElement) {
+        return;
+      }
       await this.setDeviceByOperCode(devElement);
     }
   }
@@ -134,7 +130,7 @@ export class ZiroomConditioner extends ZiroomPlatformAccessory {
         return TargetHeatingCoolingState.AUTO;
       default:
         throw new this.platform.api.hap.HapStatusError(
-          this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
+          this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
         );
     }
   }
@@ -156,7 +152,7 @@ export class ZiroomConditioner extends ZiroomPlatformAccessory {
   async setTargetTemperature(temperature: CharacteristicValue) {
     await this.setDeviceByOperCode(
       this.accessory.context.device.groupInfoMap.set_tem.devElementList[0],
-      `${temperature}`
+      `${temperature}`,
     );
   }
 
@@ -167,7 +163,7 @@ export class ZiroomConditioner extends ZiroomPlatformAccessory {
 
   private async setDeviceByOperCode(
     devElement: Ziroom.Device['groupInfoMap'][string]['devElementList'][number],
-    param?: string
+    param?: string,
   ) {
     const { device } = this.accessory.context;
     try {
@@ -181,9 +177,9 @@ export class ZiroomConditioner extends ZiroomPlatformAccessory {
     } catch {
       this.platform.log.error(`Set ${device.devName} mode failed`);
     }
-    this.service.updateCharacteristic(
+    this.services[0].updateCharacteristic(
       this.platform.api.hap.Characteristic.CurrentHeatingCoolingState,
-      await this.getCurrentHeatingCoolingState()
+      await this.getCurrentHeatingCoolingState(),
     );
   }
 
@@ -197,7 +193,7 @@ export class ZiroomConditioner extends ZiroomPlatformAccessory {
           hid,
           devUuid,
           version: 19,
-        }
+        },
       );
       this.accessory.context.device = device;
       return device;

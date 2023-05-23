@@ -3,44 +3,29 @@ import { ZiroomPlatformAccessory } from './base';
 import { ZiroomHomebridgePlatform } from '../platform';
 import { API_URL } from '../util';
 
-export class ZiroomSwitch extends ZiroomPlatformAccessory {
+export class ZiroomSwitch01 extends ZiroomPlatformAccessory {
   state = {
     On: false,
   };
 
-  constructor(
-    readonly platform: ZiroomHomebridgePlatform,
-    readonly accessory: PlatformAccessory<Device>
-  ) {
+  constructor(readonly platform: ZiroomHomebridgePlatform, readonly accessory: PlatformAccessory<Device>) {
     super(platform, accessory);
 
-    this.service =
-      this.accessory.getService(this.platform.Service.Switch) ||
-      this.accessory.addService(this.platform.Service.Switch);
+    this.generateService([this.platform.Service.Switch]);
 
-    this.service.setCharacteristic(
-      this.platform.Characteristic.Name,
-      accessory.context.device.devName
-    );
-
-    this.service
-      .getCharacteristic(this.platform.Characteristic.On)
-      .onSet(this.setOn.bind(this))
-      .onGet(this.getOn.bind(this));
+    this.services[0].getCharacteristic(this.platform.Characteristic.On).onSet(this.setOn.bind(this)).onGet(this.getOn.bind(this));
   }
 
   setOn(value: CharacteristicValue) {
     const isOn = value as boolean;
     const { device } = this.accessory.context;
-    const devElement = device.groupInfoMap.set_on_off.devElementList.find(
-      (item) => {
-        if (isOn) {
-          return item.elementType === 1;
-        } else {
-          return item.elementType === 2;
-        }
+    const devElement = device.groupInfoMap.set_on_off.devElementList.find((item) => {
+      if (isOn) {
+        return item.elementType === 1;
+      } else {
+        return item.elementType === 2;
       }
-    );
+    });
     if (!devElement) {
       this.platform.log.error('devElement not found');
       return;
@@ -54,10 +39,7 @@ export class ZiroomSwitch extends ZiroomPlatformAccessory {
       })
       .then(() => {
         this.state.On = isOn;
-        this.platform.log.debug(
-          `Set ${device.devName} ->`,
-          devElement.operName
-        );
+        this.platform.log.debug(`Set ${device.devName} ->`, devElement.operName);
       })
       .catch(() => {
         this.platform.log.error(`Set ${device.devName} failed`);
@@ -68,22 +50,17 @@ export class ZiroomSwitch extends ZiroomPlatformAccessory {
     let isOn = this.state.On;
     const { device } = this.accessory.context;
     try {
-      const { devStateMap } = await this.platform.request<Ziroom.Device>(
-        API_URL.getDeviceDetail,
-        {
-          hid: this.platform.config.hid,
-          devUuid: device.devUuid.split('-')[0],
-          version: 19,
-        }
-      );
+      const { devStateMap } = await this.platform.request<Ziroom.Device>(API_URL.getDeviceDetail, {
+        hid: this.platform.config.hid,
+        devUuid: device.devUuid.split('-')[0],
+        version: 19,
+      });
       const { devElementList } = device.groupInfoMap.set_on_off;
       if (!devElementList) {
         this.platform.log.error('devElementList not found');
         return isOn;
       }
-      const { elementType } = devElementList.find(
-        (item) => item.value === devStateMap[devElementList[0].prodStateCode]
-      )!;
+      const { elementType } = devElementList.find((item) => item.value === devStateMap[devElementList[0].prodStateCode])!;
       if (elementType === 1) {
         isOn = true;
       } else if (elementType === 2) {

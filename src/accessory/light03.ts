@@ -115,11 +115,16 @@ export class ZiroomLight03 extends ZiroomPlatformAccessory {
 
   setBrightness(value: CharacteristicValue) {
     const brightness = value as number;
-    this.setDeviceProperty(
-      'set_brightness',
-      brightness,
-      (devElementList) => devElementList[0],
-    );
+    if (brightness === 0) {
+      this.setOn(false);
+    } else {
+      this.setOn(true);
+      this.setDeviceProperty(
+        'set_brightness',
+        brightness,
+        (devElementList) => devElementList[0],
+      );
+    }
   }
 
   getColorTemperature(): Promise<CharacteristicValue> {

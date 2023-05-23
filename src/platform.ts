@@ -9,7 +9,6 @@ import {
 } from 'homebridge';
 import jwtDecode from 'jwt-decode';
 import {
-  ZiroomBathroomMaster01,
   ZiroomConditioner02,
   ZiroomCurtain01,
   ZiroomLight03,

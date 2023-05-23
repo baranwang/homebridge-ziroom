@@ -43,10 +43,6 @@ export class ZiroomPlatformAccessory {
     try {
       const deviceDetail = await this.deviceDetailPromise;
       const { devStateMap, groupInfoMap } = deviceDetail;
-      if (deviceDetail.modelCode === 'bathroommaster01') {
-
-        console.log('deviceDetail', JSON.stringify(deviceDetail));
-      }
 
       this.accessory.context.device.groupInfoMap = groupInfoMap;
 
@@ -81,5 +77,11 @@ export class ZiroomPlatformAccessory {
       this.platform.log.error(`Set ${device.devName} failed`, error);
       throw error;
     }
+  }
+
+  get devConfig() {
+    return this.platform.config.devConfig?.[
+      this.accessory.context.device.devUuid
+    ];
   }
 }

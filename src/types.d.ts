@@ -68,5 +68,5 @@ interface ZiroomPlatformConfig {
   token?: string;
   uid?: string;
   hid?: string;
-  devConfig?: Record<string, Record<'reverseColorTem', any>>;
+  devConfig?: Record<string, Record<'reverseColorTem' | 'reversePosition', any>>;
 }

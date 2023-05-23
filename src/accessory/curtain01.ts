@@ -7,25 +7,46 @@ export class ZiroomCurtain01 extends ZiroomPlatformAccessory {
 
   targetPosition = 0;
 
-  constructor(readonly platform: ZiroomHomebridgePlatform, readonly accessory: PlatformAccessory<Device>) {
+  constructor(
+    readonly platform: ZiroomHomebridgePlatform,
+    readonly accessory: PlatformAccessory<Device>,
+  ) {
     super(platform, accessory);
 
     this.generateService([this.platform.Service.WindowCovering]);
 
-    this.services[0].getCharacteristic(this.platform.Characteristic.CurrentPosition).onGet(this.getPosition.bind(this));
-    this.services[0].getCharacteristic(this.platform.Characteristic.TargetPosition).onGet(this.getPosition.bind(this)).onSet(this.setPosition.bind(this));
-    this.services[0].getCharacteristic(this.platform.Characteristic.PositionState).onGet(this.getPositionState.bind(this));
+    this.services[0]
+      .getCharacteristic(this.platform.Characteristic.CurrentPosition)
+      .onGet(this.getPosition.bind(this));
+    this.services[0]
+      .getCharacteristic(this.platform.Characteristic.TargetPosition)
+      .onGet(this.getPosition.bind(this))
+      .onSet(this.setPosition.bind(this));
+    this.services[0]
+      .getCharacteristic(this.platform.Characteristic.PositionState)
+      .onGet(this.getPositionState.bind(this));
+  }
+
+  get reversePosition() {
+    return this.devConfig?.reversePosition ?? false;
   }
 
   async getPosition() {
     const { devState } = await this.getDevice('curtain_opening');
     this.position = Number(devState);
+    if (this.reversePosition) {
+      this.position = 100 - this.position;
+    }
     return this.position;
   }
 
   async setPosition(value: CharacteristicValue) {
-    const position = value as number;
-    const { devElementList } = this.accessory.context.device.groupInfoMap.curtain_opening;
+    let position = value as number;
+    const { devElementList } =
+      this.accessory.context.device.groupInfoMap.curtain_opening;
+    if (this.reversePosition) {
+      position = 100 - position;
+    }
     this.setDevice(devElementList[0], position.toString());
     this.targetPosition = position;
   }

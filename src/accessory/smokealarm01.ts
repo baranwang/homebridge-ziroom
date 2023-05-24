@@ -9,26 +9,26 @@ export class ZiroomSmokeAlarm01 extends ZiroomPlatformAccessory {
   ) {
     super(platform, accessory);
 
-    this.generateService([this.platform.Service.LeakSensor]);
+    this.generateService([this.platform.Service.SmokeSensor]);
 
     this.services[0]
-      .getCharacteristic(this.platform.Characteristic.LeakDetected)
-      .onGet(this.getLeakDetected.bind(this));
+      .getCharacteristic(this.platform.Characteristic.SmokeDetected)
+      .onGet(this.getSmokeDetected.bind(this));
     this.services[0]
       .getCharacteristic(this.platform.Characteristic.StatusLowBattery)
       .onGet(this.getStatusLowBattery.bind(this));
   }
 
-  async getLeakDetected() {
+  async getSmokeDetected() {
     const device = await this.getDeviceDetail();
     const [, value] =
       Object.entries(device.devStateMap).find(([key]) =>
         key.includes('alarmed'),
       ) ?? [];
     if (value === '1') {
-      return this.platform.Characteristic.LeakDetected.LEAK_DETECTED;
+      return this.platform.Characteristic.SmokeDetected.SMOKE_DETECTED;
     }
-    return this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+    return this.platform.Characteristic.SmokeDetected.SMOKE_NOT_DETECTED;
   }
 
   async getStatusLowBattery() {

@@ -9,10 +9,10 @@ export class ZiroomGasAlarm01 extends ZiroomPlatformAccessory {
   ) {
     super(platform, accessory);
 
-    this.generateService([this.platform.Service.LeakSensor]);
+    this.generateService([this.platform.Service.CarbonMonoxideSensor]);
 
     this.services[0]
-      .getCharacteristic(this.platform.Characteristic.LeakDetected)
+      .getCharacteristic(this.platform.Characteristic.CarbonMonoxideDetected)
       .onGet(this.getLeakDetected.bind(this));
   }
 
@@ -23,8 +23,9 @@ export class ZiroomGasAlarm01 extends ZiroomPlatformAccessory {
         key.includes('gas_alarmed'),
       ) ?? [];
     if (value === '1') {
-      return this.platform.Characteristic.LeakDetected.LEAK_DETECTED;
+      return this.platform.Characteristic.CarbonMonoxideDetected
+        .CO_LEVELS_ABNORMAL;
     }
-    return this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+    return this.platform.Characteristic.CarbonMonoxideDetected.CO_LEVELS_NORMAL;
   }
 }

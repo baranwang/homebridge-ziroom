@@ -12,7 +12,7 @@ npm i -g --unsafe-perm homebridge homebridge-ziroom
 
 自行抓取自如 APP 登录后的 Token 配置在 Homebridge 配置文件中，如下：
 
-```json
+```jsonc
 {
   // ...
   "platforms": [
@@ -25,3 +25,18 @@ npm i -g --unsafe-perm homebridge homebridge-ziroom
   ]
 }
 ```
+
+## 支持的设备
+
+自如的智能设备有很多种，目前支持的设备如下：
+
+- [x] 空调
+- [x] 筒灯
+- [x] 窗帘
+- [x] 浴霸
+- [x] 水浸传感器
+- [x] 烟雾传感器
+- [x] 燃气传感器
+- [x] 单键开关
+- [ ] 双键开关
+- ...

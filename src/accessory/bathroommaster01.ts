@@ -62,10 +62,12 @@ export class ZiroomBathroomMaster01 extends ZiroomPlatformAccessory {
         this.platform.Characteristic.HeatingThresholdTemperature,
       )
       .setProps({
-        minValue: 16,
+        minValue: 24,
         maxValue: 32,
         minStep: 8,
-      });
+      })
+      .onGet(this.getHeaterTemperature.bind(this))
+      .onSet(this.setHeaterTemperature.bind(this));
   }
 
   async getLightOn() {
@@ -205,6 +207,41 @@ export class ZiroomBathroomMaster01 extends ZiroomPlatformAccessory {
     }
     if (value === this.platform.Characteristic.Active.ACTIVE) {
       await this.setDevice(weakHeater.deviceOnElement);
+    } else {
+      await Promise.all([
+        this.setDevice(weakHeater.deviceOffElement),
+        this.setDevice(strongHeater.deviceOffElement),
+      ]);
+    }
+  }
+
+  async getHeaterTemperature() {
+    const { weakHeater, strongHeater } = await this.getHeaterDevice();
+    if (weakHeater.devState === '1') {
+      return 24;
+    }
+    if (strongHeater.devState === '1') {
+      return 32;
+    }
+    return 24;
+  }
+
+  async setHeaterTemperature(value: CharacteristicValue) {
+    const temperature = value as number;
+    const { weakHeater, strongHeater } = await this.getHeaterDevice();
+    if (
+      !weakHeater.deviceOnElement ||
+      !weakHeater.deviceOffElement ||
+      !strongHeater.deviceOnElement ||
+      !strongHeater.deviceOffElement
+    ) {
+      this.platform.log.error('devElement not found');
+      return;
+    }
+    if (temperature <= 24) {
+      await this.setDevice(weakHeater.deviceOnElement);
+    } else if (temperature >= 32) {
+      await this.setDevice(strongHeater.deviceOnElement);
     } else {
       await Promise.all([
         this.setDevice(weakHeater.deviceOffElement),

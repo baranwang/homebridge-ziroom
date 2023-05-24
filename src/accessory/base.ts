@@ -55,21 +55,26 @@ export class ZiroomPlatformAccessory {
     const { device } = this.accessory.context;
     try {
       if (!this.deviceDetailPromise) {
-        this.deviceDetailPromise = this.platform.request<Ziroom.Device>(
-          API_URL.getDeviceDetail,
-          {
+        this.deviceDetailPromise = this.platform
+          .request<Ziroom.Device>(API_URL.getDeviceDetail, {
             hid: this.platform.config.hid,
             uid: this.platform.config.uid,
             devUuid: device.devUuid,
             version: 19,
-          },
-        );
+          })
+          .then((res) => {
+            this.platform.log.debug(
+              `Get ${device.devName} ->`,
+              JSON.stringify(res),
+            );
+            return res;
+          })
+          .finally(() => {
+            this.deviceDetailPromise = undefined;
+          });
       }
       const deviceDetail = await this.deviceDetailPromise;
-      this.platform.log.debug(
-        `Get ${device.devName} ->`,
-        JSON.stringify(deviceDetail),
-      );
+      this.platform.log.debug(`Get ${device.devName} success`);
       return deviceDetail;
     } catch (error) {
       this.platform.log.error(`Get ${device.devName} failed`, error);
@@ -111,7 +116,7 @@ export class ZiroomPlatformAccessory {
         prodOperCode: devElement.prodOperCode,
         param,
       });
-      this.platform.log.debug(
+      this.platform.log.info(
         `Set ${device.devName} ->`,
         devElement.operName,
         JSON.stringify(result),

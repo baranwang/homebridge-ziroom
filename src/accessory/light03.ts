@@ -1,5 +1,5 @@
-import { CharacteristicValue, PlatformAccessory } from 'homebridge';
-import { ZiroomHomebridgePlatform } from '../platform';
+import type { CharacteristicValue, PlatformAccessory } from 'homebridge';
+import type { ZiroomHomebridgePlatform } from '../platform';
 import { ZiroomPlatformAccessory } from './base';
 import { transformRange } from '../util';
 
@@ -60,7 +60,7 @@ export class ZiroomLight03 extends ZiroomPlatformAccessory {
     property: Ziroom.Actions,
     value: CharacteristicValue,
     getDevElement: (
-      devElementList: Ziroom.DevElement[]
+      devElementList: Ziroom.DevElement[],
     ) => Ziroom.DevElement | undefined,
     options?: IOptions,
   ) {
@@ -109,7 +109,11 @@ export class ZiroomLight03 extends ZiroomPlatformAccessory {
     });
   }
 
-  getBrightness() {
+  async getBrightness() {
+    const isOn = await this.getOn();
+    if (!isOn) {
+      return 0;
+    }
     return this.getDeviceProperty('set_brightness');
   }
 

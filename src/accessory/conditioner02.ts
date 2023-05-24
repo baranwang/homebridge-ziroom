@@ -1,6 +1,6 @@
-import { CharacteristicValue, PlatformAccessory } from 'homebridge';
+import type { CharacteristicValue, PlatformAccessory } from 'homebridge';
 import { ZiroomPlatformAccessory } from './base';
-import { ZiroomHomebridgePlatform } from '../platform';
+import type { ZiroomHomebridgePlatform } from '../platform';
 import { API_URL } from '../util';
 
 export class ZiroomConditioner02 extends ZiroomPlatformAccessory {
@@ -97,7 +97,9 @@ export class ZiroomConditioner02 extends ZiroomPlatformAccessory {
         device.groupInfoMap.set_on_off.devElementList.find(
           (item) =>
             item.elementCode ===
-            (mode === null ? 'conditioner_off_detail' : 'conditioner_on_detail'),
+            (mode === null
+              ? 'conditioner_off_detail'
+              : 'conditioner_on_detail'),
         )!,
       );
     }
@@ -181,26 +183,5 @@ export class ZiroomConditioner02 extends ZiroomPlatformAccessory {
       this.platform.api.hap.Characteristic.CurrentHeatingCoolingState,
       await this.getCurrentHeatingCoolingState(),
     );
-  }
-
-  private async getDeviceDetail() {
-    try {
-      const { hid } = this.platform.config;
-      const { devUuid } = this.accessory.context.device;
-      const device = await this.platform.request<Ziroom.Device>(
-        API_URL.getDeviceDetail,
-        {
-          hid,
-          devUuid,
-          version: 19,
-        },
-      );
-      this.accessory.context.device = device;
-      return device;
-    } catch (e) {
-      const error = e as Error;
-      this.platform.log.error(error.message);
-      return this.accessory.context.device;
-    }
   }
 }

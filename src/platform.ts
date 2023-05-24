@@ -7,16 +7,19 @@ import {
   PlatformConfig,
   Service,
 } from 'homebridge';
-import jwtDecode from 'jwt-decode';
 import {
+  ZiroomBathroomMaster01,
   ZiroomConditioner02,
   ZiroomCurtain01,
+  ZiroomGasAlarm01,
   ZiroomLight03,
   ZiroomPlatformAccessory,
+  ZiroomSmokeAlarm01,
   ZiroomSwitch01,
+  ZiroomWaterImmersion01,
 } from './accessory';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { API_URL, request } from './util';
+import { API_URL, getJwtPayload, request } from './util';
 
 /**
  * HomebridgePlatform
@@ -54,7 +57,7 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
       return;
     }
 
-    const { uid } = jwtDecode<any>(this.config.token);
+    const { uid } = getJwtPayload(this.config.token);
     this.config.uid = uid;
 
     if (!this.config.hid) {
@@ -96,8 +99,14 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
         return ZiroomCurtain01;
       case 'conditioner02':
         return ZiroomConditioner02;
-      // case 'bathroommaster01':
-      //   return ZiroomBathroomMaster01;
+      case 'bathroommaster01':
+        return ZiroomBathroomMaster01;
+      case 'waterimmersion01':
+        return ZiroomWaterImmersion01;
+      case 'gasalarm01':
+        return ZiroomGasAlarm01;
+      case 'smokealarm01':
+        return ZiroomSmokeAlarm01;
       default:
         return null;
     }

@@ -1,12 +1,8 @@
-import { CharacteristicValue, PlatformAccessory } from 'homebridge';
-import { ZiroomHomebridgePlatform } from '../platform';
+import type { CharacteristicValue, PlatformAccessory } from 'homebridge';
+import type { ZiroomHomebridgePlatform } from '../platform';
 import { ZiroomPlatformAccessory } from './base';
 
 export class ZiroomCurtain01 extends ZiroomPlatformAccessory {
-  position = 0;
-
-  targetPosition = 0;
-
   constructor(
     readonly platform: ZiroomHomebridgePlatform,
     readonly accessory: PlatformAccessory<Device>,
@@ -24,7 +20,7 @@ export class ZiroomCurtain01 extends ZiroomPlatformAccessory {
       .onSet(this.setPosition.bind(this));
     this.services[0]
       .getCharacteristic(this.platform.Characteristic.PositionState)
-      .onGet(this.getPositionState.bind(this));
+      .onGet(() => this.platform.Characteristic.PositionState.STOPPED);
   }
 
   get reversePosition() {
@@ -33,11 +29,11 @@ export class ZiroomCurtain01 extends ZiroomPlatformAccessory {
 
   async getPosition() {
     const { devState } = await this.getDevice('curtain_opening');
-    this.position = Number(devState);
+    let position = Number(devState);
     if (this.reversePosition) {
-      this.position = 100 - this.position;
+      position = 100 - position;
     }
-    return this.position;
+    return position;
   }
 
   async setPosition(value: CharacteristicValue) {
@@ -48,17 +44,5 @@ export class ZiroomCurtain01 extends ZiroomPlatformAccessory {
       position = 100 - position;
     }
     this.setDevice(devElementList[0], position.toString());
-    this.targetPosition = position;
-  }
-
-  async getPositionState() {
-    await this.getPosition();
-    if (this.position === this.targetPosition) {
-      return this.platform.Characteristic.PositionState.STOPPED;
-    } else if (this.position > this.targetPosition) {
-      return this.platform.Characteristic.PositionState.DECREASING;
-    } else {
-      return this.platform.Characteristic.PositionState.INCREASING;
-    }
   }
 }

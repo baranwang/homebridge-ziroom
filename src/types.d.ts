@@ -17,6 +17,12 @@ declare namespace Ziroom {
     | 'show_inside_hum'
     | 'set_mode'
     | 'set_tem'
+    | 'set_nightlight_group'
+    | 'set_lighting_group'
+    | 'set_ventilate_group'
+    | 'set_weakwarm_group'
+    | 'set_strongwarm_group'
+    | 'set_blow_group'
     | 'curtain_opening';
 
   interface DevElement {
@@ -39,6 +45,9 @@ declare namespace Ziroom {
       | 'light03'
       | 'curtain01'
       | 'conditioner02'
+      | 'waterimmersion01'
+      | 'gasalarm01'
+      | 'smokealarm01'
       | 'bathroommaster01';
     devName: string;
     devUuid: string;
@@ -68,5 +77,8 @@ interface ZiroomPlatformConfig {
   token?: string;
   uid?: string;
   hid?: string;
-  devConfig?: Record<string, Record<'reverseColorTem' | 'reversePosition', any>>;
+  devConfig?: Record<
+    string,
+    Record<'reverseColorTem' | 'reversePosition', any>
+  >;
 }

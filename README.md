@@ -21,6 +21,13 @@ npm i -g --unsafe-perm homebridge homebridge-ziroom
       "name": "Ziroom",
       "token": "token",
       "hid": "hid", // 可选，如果填入合同号，则会自动查找合同对应的房间
+      "devConfig": {
+        "${devUuid}": { // devUuid 为设备的 UUID，可以在日志中找到
+          // 实际中有发现设备的一些配置是反的，例如灯光的冷暖，窗帘的开关，可以通过这里进行反转
+          "reverseColorTem": false, // 反转灯光的冷暖
+          "reversePosition": false // 反转窗帘的开关
+        }
+      }
     }
   ]
 }

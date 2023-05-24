@@ -1,5 +1,5 @@
-import { PlatformAccessory, Service } from 'homebridge';
-import { ZiroomHomebridgePlatform } from '../platform';
+import type { PlatformAccessory, Service } from 'homebridge';
+import type { ZiroomHomebridgePlatform } from '../platform';
 import { API_URL } from '../util';
 
 export class ZiroomPlatformAccessory {

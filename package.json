@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge Ziroom Platform",
   "name": "homebridge-ziroom",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "自如智能硬件 Homebridge 插件",
   "license": "Apache-2.0",
   "repository": {

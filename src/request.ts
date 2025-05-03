@@ -1,0 +1,157 @@
+import type { Logger } from 'homebridge';
+import { createCipheriv, createDecipheriv, randomUUID } from 'node:crypto';
+import { URL } from 'node:url';
+import type { ZiroomDeviceInfo } from './types';
+
+export class ZiroomRequest {
+  private static readonly SECRET_KEY = 'vpRZ1kmU';
+  private static readonly IV = 'EbpU4WtY';
+
+  private hid = '';
+
+  constructor(
+    public readonly log: Logger,
+    private readonly token: string,
+    hid?: string,
+  ) {
+    this.hid = hid ?? '';
+  }
+
+  private encodeDes(plainText: string): string {
+    const cipher = createCipheriv('des-cbc', ZiroomRequest.SECRET_KEY, ZiroomRequest.IV);
+    cipher.setAutoPadding(true);
+    let encrypted = cipher.update(plainText, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return encrypted;
+  }
+
+  private decodeDes(encrypted: string): string {
+    const decipher = createDecipheriv('des-cbc', ZiroomRequest.SECRET_KEY, ZiroomRequest.IV);
+    decipher.setAutoPadding(true);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  }
+
+  private createHeaders(timestamp: number): Headers {
+    const headers = new Headers({
+      token: this.token,
+      'User-Agent': 'ZiroomerProject/7.14.7 (iPhone; iOS 18.5; Scale/3.00)',
+      'Content-Type': 'application/json',
+      appType: '1',
+      sys: 'app',
+      timestamp: timestamp.toString(),
+      'Request-Id': `${randomUUID().slice(0, 8)}:${Math.floor(timestamp / 1000)}`,
+      'Client-Type': 'ios',
+      phoneName: 'iPhone',
+      osType: 'iOS',
+      osVersion: '18.5',
+    });
+
+    return headers;
+  }
+
+  private getJwtPayload() {
+    const [, payload] = this.token.split('.');
+    try {
+      const payloadString = Buffer.from(payload, 'base64').toString('utf8');
+      return JSON.parse(payloadString);
+    } catch (error) {
+      this.log.error(String(error));
+      return null;
+    }
+  }
+
+  get uid() {
+    return this.getJwtPayload()?.uid;
+  }
+
+  async getHid() {
+    if (this.hid) {
+      return this.hid;
+    }
+    const resp = await this.request<{ hid: string }[]>('/homeapi/v10/home/queryHomeList', {
+      uid: this.uid,
+    });
+    this.hid = resp?.[0]?.hid ?? '';
+    return this.hid;
+  }
+
+  public async request<T = any>(path: string, data: Record<string, any>): Promise<T> {
+    const timestamp = Date.now();
+    const body = this.encodeDes(JSON.stringify(data));
+    const url = new URL(path, 'https://ztoread.ziroom.com/');
+    const headers = this.createHeaders(timestamp);
+
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers,
+        body,
+      });
+
+      if (!resp.ok) {
+        const error = new Error(`请求失败: ${resp.status} ${resp.statusText}`);
+        this.log.error(error.message);
+        throw error;
+      }
+
+      const text = await resp.text();
+      const dataString = this.decodeDes(text);
+
+      const respData = JSON.parse(dataString);
+      if (respData.code === '200') {
+        return respData.data as T;
+      }
+      throw new Error(`[${path}] ${respData.code}: ${respData.message}`);
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        const err = new Error(`响应解析失败: ${error.message}`);
+        this.log.error(err.message);
+        throw err;
+      }
+      this.log.error(String(error));
+      throw error;
+    }
+  }
+
+  public async getDeviceList() {
+    const hid = await this.getHid();
+    const resp = await this.request('/homeapi/v4/homePageDevice/queryAreaDeviceListNew', {
+      uid: this.uid,
+      hid,
+      type: 0,
+      version: 25,
+    });
+    const devices = new Map<string, ZiroomDeviceInfo>();
+    for (const category of resp.deviceData.deviceList) {
+      for (const device of category.deviceList) {
+        devices.set(device.devUuid, device);
+      }
+    }
+    return Array.from(devices.values());
+  }
+
+  public async getDeviceDetail(devUuid: string) {
+    const hid = await this.getHid();
+    const resp = await this.request<ZiroomDeviceInfo>('/homeapi/v3/device/deviceDetailPage', {
+      uid: this.uid,
+      hid,
+      version: 19,
+      devUuid,
+    });
+    return resp;
+  }
+
+  public async setDeviceState(devUuid: string, prodOperCode: string, param: string) {
+    const hid = await this.getHid();
+    const resp = await this.request('/homeapi/v2/device/controlDeviceByOperCode', {
+      uid: this.uid,
+      hid,
+      devUuid,
+      prodOperCode,
+      param,
+    });
+    return resp;
+  }
+}

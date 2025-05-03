@@ -1,0 +1,50 @@
+{
+  "name": "homebridge-ziroom",
+  "displayName": "Ziroom Homebridge Plugin",
+  "description": "自如智能硬件 Homebridge 插件",
+  "version": "3.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": "^18.20.4 || ^20.18.0 || ^22.10.0",
+    "homebridge": "^1.8.0 || ^2.0.0-beta.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/baranwang/homebridge-ziroom.git"
+  },
+  "bugs": {
+    "url": "https://github.com/baranwang/homebridge-ziroom/issues"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "homekit",
+    "ziroom",
+    "自如"
+  ],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "nodemon"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@changesets/cli": "^2.29.2",
+    "@rslib/core": "^0.6.8",
+    "@types/node": "^22.8.1",
+    "homebridge": "^1.9.0",
+    "homebridge-config-ui-x": "^4.73.0",
+    "nodemon": "^3.1.10",
+    "typescript": "^5.8.3"
+  }
+}

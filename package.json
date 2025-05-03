@@ -35,7 +35,9 @@
   ],
   "scripts": {
     "build": "rslib build",
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "prerelease": "npm run build",
+    "release": "changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

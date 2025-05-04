@@ -108,6 +108,10 @@ export class Conditioner02 extends BaseAccessory {
       [TargetHeatingCoolingState.AUTO]: AcOperationMode.AUTO,
     }[value as number];
     if (mode) {
+      const on = this.getDevicePropsSync('set_on_off');
+      if (on !== '1') {
+        await this.setDeviceProps('set_on_off', '1');
+      }
       await this.setDeviceProps('set_mode', mode);
     }
   }

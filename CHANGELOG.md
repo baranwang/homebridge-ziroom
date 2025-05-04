@@ -1,5 +1,11 @@
 # homebridge-ziroom
 
+## 3.1.0
+
+### Minor Changes
+
+- 46d7cea: 支持自动登录
+
 ## 3.0.2
 
 ### Patch Changes

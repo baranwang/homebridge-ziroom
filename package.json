@@ -2,7 +2,7 @@
   "name": "homebridge-ziroom",
   "displayName": "Ziroom Homebridge Plugin",
   "description": "自如智能硬件 Homebridge 插件",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "type": "module",
   "exports": {
     ".": {

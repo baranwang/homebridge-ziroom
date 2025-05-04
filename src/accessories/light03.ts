@@ -2,6 +2,11 @@ import type { CharacteristicValue } from 'homebridge';
 import { BaseAccessory } from './base';
 
 export class Light03 extends BaseAccessory {
+  // 色温转换常量
+  private static readonly MIN_MIRED = 140;
+  private static readonly MAX_MIRED = 500;
+  private static readonly KELVIN_MULTIPLIER = 1000000;
+
   init() {
     this.setServices('light', this.platform.Service.Lightbulb);
 
@@ -27,19 +32,21 @@ export class Light03 extends BaseAccessory {
       return;
     }
 
+    // 更新开关状态
     const on = this.getDevicePropsSync('set_on_off');
     lightService.getCharacteristic(this.Characteristic.On).updateValue(on === '1');
 
+    // 更新亮度
     const brightness = Number(this.getDevicePropsSync('set_brightness'));
     if (!Number.isNaN(brightness)) {
       lightService.getCharacteristic(this.Characteristic.Brightness).updateValue(brightness);
     }
 
-    const colorTemperature = Number(this.getDevicePropsSync('set_color_tem'));
-    if (!Number.isNaN(colorTemperature)) {
-      lightService
-        .getCharacteristic(this.Characteristic.ColorTemperature)
-        .updateValue(this.colorTemperatureMapValue.btoa(colorTemperature.toString()));
+    // 更新色温
+    const kelvinValue = Number(this.getDevicePropsSync('set_color_tem'));
+    if (!Number.isNaN(kelvinValue)) {
+      const miredValue = this.convertKelvinToMired(kelvinValue);
+      lightService.getCharacteristic(this.Characteristic.ColorTemperature).updateValue(miredValue);
     }
   }
 
@@ -60,7 +67,7 @@ export class Light03 extends BaseAccessory {
     if (on !== '1') {
       return 0;
     }
-    return Number(brightness) ?? 0;
+    return Number(brightness) || 0;
   }
 
   async setBrightness(value: CharacteristicValue) {
@@ -72,16 +79,22 @@ export class Light03 extends BaseAccessory {
     }
   }
 
-  get colorTemperatureMapValue() {
-    return this.mapValueFactory('set_color_tem', 1, 140, 500);
-  }
-
   async getColorTemperature() {
-    const colorTemperature = await this.getDeviceProps('set_color_tem');
-    return this.colorTemperatureMapValue.btoa(colorTemperature ?? '');
+    const kelvin = await this.getDeviceProps('set_color_tem');
+    const kelvinValue = Number(kelvin);
+    if (Number.isNaN(kelvinValue)) {
+      return Light03.MIN_MIRED;
+    }
+    return this.convertKelvinToMired(kelvinValue);
   }
 
   async setColorTemperature(value: CharacteristicValue) {
-    await this.setDeviceProps('set_color_tem', this.colorTemperatureMapValue.atob(value as number).toString());
+    const kelvin = Math.round(Light03.KELVIN_MULTIPLIER / (value as number));
+    await this.setDeviceProps('set_color_tem', kelvin.toString());
+  }
+
+  private convertKelvinToMired(kelvin: number) {
+    const mired = Math.round(Light03.KELVIN_MULTIPLIER / kelvin);
+    return Math.max(Light03.MIN_MIRED, Math.min(mired, Light03.MAX_MIRED));
   }
 }

@@ -1,7 +1,7 @@
 import type { Service } from 'homebridge';
 import type { ZiroomHomebridgePlatform } from '../platform';
 import type { ZiroomDevElementInfo, ZiroomDeviceInfo, ZiroomPlatformAccessory } from '../types';
-import { mapValue, objectEntries } from '../utils';
+import { objectEntries } from '../utils';
 
 export abstract class BaseAccessory {
   public services: Record<string, Service> = {};
@@ -139,49 +139,5 @@ export abstract class BaseAccessory {
     } catch (error) {
       this.platform.log.error('设置失败', this.accessory.displayName, element.elementName, value, error);
     }
-  }
-
-  protected mapValueFactory(prop: string, step: number, homekitMinValue: number, homekitMaxValue: number) {
-    const element = this.deviceInfo.groupInfoMap[prop]?.devElementList?.[0];
-    const minValue = element?.minValue;
-    const maxValue = element?.maxValue;
-
-    const safeConverter = (value: number | string, defaultValue = 0) => {
-      const numValue = typeof value === 'string' ? Number(value) : value;
-      return Number.isNaN(numValue) ? defaultValue : numValue;
-    };
-
-    const createConverter = (
-      sourceMin: number,
-      sourceMax: number,
-      targetMin: number,
-      targetMax: number,
-      defaultValue: number,
-    ) => {
-      return (value: number | string) => {
-        const numValue = safeConverter(value, defaultValue);
-        return mapValue([sourceMin, sourceMax], [targetMin, targetMax], numValue, step);
-      };
-    };
-
-    // 如果没有定义范围，返回简化的转换函数
-    if (minValue === undefined || maxValue === undefined) {
-      return {
-        atob: safeConverter,
-        btoa: safeConverter,
-      };
-    }
-
-    return {
-      /**
-       * 将 homekit 的值转换为设备需要近似值
-       */
-      atob: createConverter(homekitMinValue, homekitMaxValue, minValue, maxValue, minValue),
-
-      /**
-       * 将设备值转换为 homekit 的值
-       */
-      btoa: createConverter(minValue, maxValue, homekitMinValue, homekitMaxValue, homekitMinValue),
-    };
   }
 }

@@ -39,6 +39,10 @@
     "prerelease": "npm run build",
     "release": "changeset publish"
   },
+  "dependencies": {
+    "@playwright/browser-webkit": "^1.52.0",
+    "playwright": "^1.52.0"
+  },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@changesets/cli": "^2.29.2",

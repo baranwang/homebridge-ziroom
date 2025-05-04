@@ -12,10 +12,22 @@
         "default": "homebridge-plugin-ziroom",
         "description": "The name of the plugin instance."
       },
+      "account": {
+        "title": "Account",
+        "type": "string",
+        "required": false,
+        "description": "Your Ziroom account."
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "required": false,
+        "description": "Your Ziroom password."
+      },
       "token": {
         "title": "Token",
         "type": "string",
-        "required": true,
+        "required": false,
         "description": "Your Ziroom token."
       },
       "hid": {

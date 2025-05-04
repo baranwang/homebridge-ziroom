@@ -1,7 +1,15 @@
 import type { Logger } from 'homebridge';
 import { createCipheriv, createDecipheriv, randomUUID } from 'node:crypto';
 import { URL } from 'node:url';
-import type { ZiroomDeviceInfo } from './types';
+import type { ZiroomDeviceInfo } from '../types';
+import { login } from './login';
+
+export interface ZiroomRequestOptions {
+  token?: string;
+  account?: string;
+  password?: string;
+  hid?: string;
+}
 
 export class ZiroomRequest {
   private static readonly SECRET_KEY = 'vpRZ1kmU';
@@ -9,12 +17,15 @@ export class ZiroomRequest {
 
   private hid = '';
 
+  private token = '';
+  private tokenExpiredAt = Number.POSITIVE_INFINITY;
+
   constructor(
     public readonly log: Logger,
-    private readonly token: string,
-    hid?: string,
+    private readonly options: ZiroomRequestOptions,
   ) {
-    this.hid = hid ?? '';
+    this.hid = options.hid ?? '';
+    this.token = options.token ?? '';
   }
 
   private encodeDes(plainText: string): string {
@@ -33,9 +44,28 @@ export class ZiroomRequest {
     return decrypted;
   }
 
-  private createHeaders(timestamp: number): Headers {
+  private async getToken() {
+    if (this.token && this.tokenExpiredAt > Date.now()) {
+      return this.token;
+    }
+    await this.login();
+    return this.token;
+  }
+
+  private async login() {
+    if (this.options.account && this.options.password) {
+      const token = await login(this.options.account, this.options.password);
+      if (token) {
+        this.token = token;
+        this.tokenExpiredAt = Date.now() + 1000 * 60 * 60 * 24 * 3;
+      }
+    }
+  }
+
+  private async createHeaders(timestamp: number) {
+    const token = await this.getToken();
     const headers = new Headers({
-      token: this.token,
+      token,
       'User-Agent': 'ZiroomerProject/7.14.7 (iPhone; iOS 18.5; Scale/3.00)',
       'Content-Type': 'application/json',
       appType: '1',
@@ -81,7 +111,7 @@ export class ZiroomRequest {
     const timestamp = Date.now();
     const body = this.encodeDes(JSON.stringify(data));
     const url = new URL(path, 'https://ztoread.ziroom.com/');
-    const headers = this.createHeaders(timestamp);
+    const headers = await this.createHeaders(timestamp);
 
     try {
       const resp = await fetch(url, {

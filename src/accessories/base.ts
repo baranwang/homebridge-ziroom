@@ -1,7 +1,6 @@
 import type { Service } from 'homebridge';
 import type { ZiroomHomebridgePlatform } from '../platform';
 import type { ZiroomDevElementInfo, ZiroomDeviceInfo, ZiroomPlatformAccessory } from '../types';
-import { objectEntries } from '../utils';
 
 export abstract class BaseAccessory {
   public services: Record<string, Service> = {};
@@ -30,9 +29,11 @@ export abstract class BaseAccessory {
         Name: deviceInfo.prodTypeName,
         SerialNumber: deviceInfo.prodTypeId,
       } as const;
-      objectEntries(accessoryInformationMap).forEach(([key, value]) => {
+      Object.entries(accessoryInformationMap).forEach(([key, value]) => {
         if (value) {
-          infoService?.getCharacteristic(this.platform.Characteristic[key]).onGet(() => value);
+          infoService
+            ?.getCharacteristic(this.platform.Characteristic[key as keyof typeof accessoryInformationMap])
+            .onGet(() => value);
         }
       });
     } catch (error) {

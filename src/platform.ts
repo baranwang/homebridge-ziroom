@@ -1,6 +1,6 @@
 import type { API, Characteristic, DynamicPlatformPlugin, Logger, PlatformConfig, Service } from 'homebridge';
 import { Conditioner02, Light03, Light04 } from './accessories';
-import { ZiroomRequest } from './request';
+import { ZiroomRequest, type ZiroomRequestOptions } from './request';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import type { ZiroomDeviceInfo, ZiroomPlatformAccessory, ZiroomPlatformAccessoryContext } from './types';
 
@@ -18,7 +18,7 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
-    this.request = new ZiroomRequest(this.log, this.config.token, this.config.hid);
+    this.request = new ZiroomRequest(this.log, this.config as ZiroomRequestOptions);
     this.api.on('didFinishLaunching', () => {
       this.discoverDevices();
     });

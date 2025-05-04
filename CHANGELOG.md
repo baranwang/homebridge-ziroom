@@ -1,5 +1,11 @@
 # homebridge-ziroom
 
+## 3.1.1
+
+### Patch Changes
+
+- 11f54a1: 移除无头模式以改善登录体验
+
 ## 3.1.0
 
 ### Minor Changes

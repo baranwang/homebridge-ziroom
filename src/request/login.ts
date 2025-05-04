@@ -9,7 +9,7 @@ interface LoginResponse {
 }
 
 export const login = async (account: string, password: string) => {
-  const browser = await webkit.launch({ headless: false });
+  const browser = await webkit.launch();
   const page = await browser.newPage();
   let responseData: LoginResponse | null = null;
   await page.route('**/index.php?r=account%2Flogin%2Flogin', async (route) => {

@@ -133,6 +133,24 @@ export class ZiroomRequest {
       if (respData.code === '200') {
         return respData.data as T;
       }
+      if (respData.code === '40005') {
+        let retryCount = 0;
+        const maxRetries = 3;
+
+        while (retryCount < maxRetries) {
+          try {
+            await this.login();
+            return this.request(path, data);
+          } catch (error) {
+            retryCount++;
+            if (retryCount >= maxRetries) {
+              this.log.error(`登录重试${maxRetries}次失败`);
+              throw error;
+            }
+            this.log.warn(`登录失败，正在进行第${retryCount}次重试`);
+          }
+        }
+      }
       throw new Error(`[${path}] ${respData.code}: ${respData.message}`);
     } catch (error) {
       if (error instanceof SyntaxError) {

@@ -1,5 +1,11 @@
 # homebridge-ziroom
 
+## 3.1.2
+
+### Patch Changes
+
+- 1ab3157: 增加重试机制
+
 ## 3.1.1
 
 ### Patch Changes

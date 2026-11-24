@@ -1,6 +1,6 @@
-import type { Logger } from 'homebridge';
 import { createCipheriv, createDecipheriv, randomUUID } from 'node:crypto';
 import { URL } from 'node:url';
+import type { Logger } from 'homebridge';
 import type { ZiroomDeviceInfo } from '../types';
 import { login } from './login';
 
@@ -29,7 +29,10 @@ export class ZiroomRequest {
   }
 
   private encodeDes(plainText: string): string {
-    const cipher = createCipheriv('des-cbc', ZiroomRequest.SECRET_KEY, ZiroomRequest.IV);
+    // OpenSSL 3 disables single DES in its default provider. Three-key 3DES
+    // with the same key repeated is equivalent to DES and remains available
+    // without enabling OpenSSL's legacy provider.
+    const cipher = createCipheriv('des-ede3-cbc', ZiroomRequest.SECRET_KEY.repeat(3), ZiroomRequest.IV);
     cipher.setAutoPadding(true);
     let encrypted = cipher.update(plainText, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -37,7 +40,7 @@ export class ZiroomRequest {
   }
 
   private decodeDes(encrypted: string): string {
-    const decipher = createDecipheriv('des-cbc', ZiroomRequest.SECRET_KEY, ZiroomRequest.IV);
+    const decipher = createDecipheriv('des-ede3-cbc', ZiroomRequest.SECRET_KEY.repeat(3), ZiroomRequest.IV);
     decipher.setAutoPadding(true);
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');

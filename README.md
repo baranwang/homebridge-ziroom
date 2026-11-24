@@ -32,7 +32,7 @@ npm i -g --unsafe-perm homebridge homebridge-ziroom
 
 - [x] 空调
 - [x] 灯
-- [ ] 窗帘
+- [x] 窗帘
 - [ ] 浴霸
 - [ ] 水浸传感器
 - [ ] 烟雾传感器

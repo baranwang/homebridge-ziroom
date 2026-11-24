@@ -1,5 +1,5 @@
 import type { API, Characteristic, DynamicPlatformPlugin, Logger, PlatformConfig, Service } from 'homebridge';
-import { Conditioner02, Light03, Light04 } from './accessories';
+import { Conditioner02, Curtain01, Light03, Light04 } from './accessories';
 import { ZiroomRequest, type ZiroomRequestOptions } from './request';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import type { ZiroomDeviceInfo, ZiroomPlatformAccessory, ZiroomPlatformAccessoryContext } from './types';
@@ -73,6 +73,8 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
         return Light04;
       case 'conditioner02':
         return Conditioner02;
+      case 'curtain01':
+        return Curtain01;
       default:
         return null;
     }

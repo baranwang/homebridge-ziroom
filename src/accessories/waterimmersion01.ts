@@ -13,7 +13,10 @@ export class WaterImmersion01 extends BaseAccessory {
     battery.getCharacteristic(this.Characteristic.BatteryLevel).onGet(this.getBatteryLevel.bind(this));
     battery.getCharacteristic(this.Characteristic.StatusLowBattery).onGet(this.getLowBatteryStatus.bind(this));
     this.updateValues();
-    this.startPolling(this.platform.getPollingIntervalMs('detectorPollIntervalMinutes', 2));
+    this.startPolling(
+      this.platform.getPollingIntervalMs('detectorPollIntervalMinutes', 2),
+      () => this.loadDeviceInfoFromList(),
+    );
   }
 
   onDeviceInfoChange() {
@@ -21,7 +24,10 @@ export class WaterImmersion01 extends BaseAccessory {
   }
 
   getLeakDetected(): number {
-    const alarm = this.readBinaryState(this.getDeviceStateSync(LEAK_ALARM), LEAK_ALARM);
+    const alarm = this.getLeakAlarmState();
+    if (alarm === undefined) {
+      throw new Error(`无法读取传感器状态: ${LEAK_ALARM}`);
+    }
     return alarm ? this.Characteristic.LeakDetected.LEAK_DETECTED : this.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
   }
 
@@ -47,13 +53,29 @@ export class WaterImmersion01 extends BaseAccessory {
     return value === '1';
   }
 
+  private getLeakAlarmState(): boolean | undefined {
+    const description = this.getDeviceStateSync('device_description');
+    if (description === '报警') {
+      return true;
+    }
+    if (description === '干燥' || description === '正常' || description === '未报警' || description === '无报警') {
+      return false;
+    }
+
+    const alarm = this.getDeviceStateSync(LEAK_ALARM);
+    if (alarm === '0' || alarm === '1') {
+      return alarm === '1';
+    }
+    return undefined;
+  }
+
   private updateValues() {
     const leak = this.services.leak;
-    const alarm = this.getDeviceStateSync(LEAK_ALARM);
-    if (leak && (alarm === '0' || alarm === '1')) {
+    const alarm = this.getLeakAlarmState();
+    if (leak && alarm !== undefined) {
       leak
         .getCharacteristic(this.Characteristic.LeakDetected)
-        .updateValue(alarm === '1' ? this.Characteristic.LeakDetected.LEAK_DETECTED : this.Characteristic.LeakDetected.LEAK_NOT_DETECTED);
+        .updateValue(alarm ? this.Characteristic.LeakDetected.LEAK_DETECTED : this.Characteristic.LeakDetected.LEAK_NOT_DETECTED);
     }
 
     const battery = this.services.battery;

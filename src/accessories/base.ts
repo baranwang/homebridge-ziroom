@@ -58,7 +58,11 @@ export abstract class BaseAccessory {
     if (!deviceInfo) {
       throw new Error(`无法获取设备详情: ${this.deviceInfo.devUuid}`);
     }
-    const newDeviceInfo = { ...this.deviceInfo, ...deviceInfo };
+    const newDeviceInfo = {
+      ...this.deviceInfo,
+      ...deviceInfo,
+      devStateMap: { ...this.deviceInfo.devStateMap, ...deviceInfo.devStateMap },
+    };
     this.accessory.context.deviceInfo = newDeviceInfo;
     this.onDeviceInfoChange(newDeviceInfo);
     return newDeviceInfo;
@@ -100,16 +104,32 @@ export abstract class BaseAccessory {
     return this.getDevicePropsSync(prop);
   }
 
-  protected startPolling(intervalMs: number) {
+  protected startPolling(intervalMs: number, refresh: () => Promise<unknown> = () => this.loadDeviceInfo()) {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
     }
     this.pollTimer = setInterval(() => {
-      void this.loadDeviceInfo().catch((error) => {
+      void refresh().catch((error) => {
         this.platform.log.warn('刷新设备状态失败', this.accessory.displayName, error);
       });
     }, intervalMs);
     this.pollTimer.unref();
+  }
+
+  protected async loadDeviceInfoFromList() {
+    const deviceInfo = (await this.platform.request.getDeviceList()).find((device) => device.devUuid === this.deviceInfo.devUuid);
+    if (!deviceInfo) {
+      throw new Error(`设备列表中找不到设备: ${this.deviceInfo.devUuid}`);
+    }
+
+    const newDeviceInfo = {
+      ...this.deviceInfo,
+      ...deviceInfo,
+      devStateMap: { ...this.deviceInfo.devStateMap, ...deviceInfo.devStateMap },
+    };
+    this.accessory.context.deviceInfo = newDeviceInfo;
+    this.onDeviceInfoChange(newDeviceInfo);
+    return newDeviceInfo;
   }
 
   protected getDeviceStateSync(stateCode: string) {

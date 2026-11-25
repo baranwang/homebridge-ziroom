@@ -13,7 +13,7 @@ export class WaterImmersion01 extends BaseAccessory {
     battery.getCharacteristic(this.Characteristic.StatusLowBattery).onGet(this.getLowBatteryStatus.bind(this));
     this.updateValues();
     this.startPolling(
-      this.platform.getPollingIntervalMs('detectorPollIntervalMinutes', 0.5, 0.5),
+      this.platform.getPollingIntervalMs('detectorPollIntervalMinutes', 0.5, 0),
       () => this.loadDeviceInfoFromList(),
     );
   }

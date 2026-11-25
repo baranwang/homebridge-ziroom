@@ -46,4 +46,4 @@ npm i -g --unsafe-perm homebridge homebridge-ziroom
 
 HomeKit 将水浸传感器表示为 Leak Sensor。
 
-水浸传感器状态默认每 30 秒从自如刷新一次，智能门锁电量默认每 60 分钟刷新一次。可用 `detectorPollIntervalMinutes` 和 `lockPollIntervalMinutes` 调整轮询间隔（水浸传感器最小 30 秒，门锁最小 1 分钟）；HomeKit/HA 读取时使用最近一次缓存值。水浸传感器已实机验证。智能锁目前只支持查看电量，不支持读取锁状态、下发密码或临时密码，也不支持远程开锁。
+水浸传感器状态默认每 30 秒从自如刷新一次，智能门锁电量默认每 60 分钟刷新一次。可用 `detectorPollIntervalMinutes` 和 `lockPollIntervalMinutes` 调整轮询间隔；水浸传感器间隔须大于零，门锁电量间隔最小 1 分钟。HomeKit/HA 读取时使用最近一次缓存值。水浸传感器已实机验证。智能锁目前只支持查看电量，不支持读取锁状态、下发密码或临时密码，也不支持远程开锁。

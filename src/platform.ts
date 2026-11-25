@@ -19,7 +19,9 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
     minimumMinutes = 1,
   ) {
     const configuredMinutes = Number(this.config[configKey]);
-    const minutes = Number.isFinite(configuredMinutes) && configuredMinutes >= minimumMinutes ? configuredMinutes : defaultMinutes;
+    const minutes = Number.isFinite(configuredMinutes) && configuredMinutes > 0 && configuredMinutes >= minimumMinutes
+      ? configuredMinutes
+      : defaultMinutes;
     return minutes * 60 * 1000;
   }
 

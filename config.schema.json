@@ -39,9 +39,8 @@
       "detectorPollIntervalMinutes": {
         "title": "Detector Poll Interval (minutes)",
         "type": "number",
-        "minimum": 0.5,
         "default": 0.5,
-        "description": "How often the water detector refreshes its state from Ziroom (minimum 30 seconds)."
+        "description": "How often the water detector refreshes its state from Ziroom, in minutes. Must be greater than zero."
       },
       "lockPollIntervalMinutes": {
         "title": "Lock Battery Poll Interval (minutes)",

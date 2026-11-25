@@ -40,7 +40,7 @@ npm i -g --unsafe-perm homebridge homebridge-ziroom
 - [ ] 浴霸
 - [x] 水浸传感器（只读，含电量；已实机验证）
 - [ ] 烟雾传感器
-- [ ] 燃气报警器（暂不支持）
+- [ ] 燃气报警器
 - [ ] 单键开关
 - [ ] 双键开关
 

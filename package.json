@@ -35,7 +35,6 @@
   ],
   "scripts": {
     "build": "rslib build",
-    "prepare": "npm run build",
     "dev": "nodemon",
     "prerelease": "npm run build",
     "release": "changeset publish"

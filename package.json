@@ -31,7 +31,8 @@
     "自如"
   ],
   "files": [
-    "dist"
+    "dist",
+    "config.schema.json"
   ],
   "scripts": {
     "build": "rslib build",

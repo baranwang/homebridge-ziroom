@@ -1,5 +1,5 @@
 import type { API, Characteristic, DynamicPlatformPlugin, Logger, PlatformConfig, Service } from 'homebridge';
-import { Conditioner02, Light03, Light04 } from './accessories';
+import { Conditioner02, Curtain01, Light03, Light04, Lock01, WaterImmersion01 } from './accessories';
 import { ZiroomRequest, type ZiroomRequestOptions } from './request';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import type { ZiroomDeviceInfo, ZiroomPlatformAccessory, ZiroomPlatformAccessoryContext } from './types';
@@ -12,6 +12,18 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly accessories: ZiroomPlatformAccessory[] = [];
 
   public readonly request: ZiroomRequest;
+
+  getPollingIntervalMs(
+    configKey: 'detectorPollIntervalMinutes' | 'lockPollIntervalMinutes',
+    defaultMinutes: number,
+    minimumMinutes = 1,
+  ) {
+    const configuredMinutes = Number(this.config[configKey]);
+    const minutes = Number.isFinite(configuredMinutes) && configuredMinutes > 0 && configuredMinutes >= minimumMinutes
+      ? configuredMinutes
+      : defaultMinutes;
+    return minutes * 60 * 1000;
+  }
 
   constructor(
     public readonly log: Logger,
@@ -33,6 +45,15 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
     const devices = await this.request.getDeviceList();
     for (const device of devices) {
       this.handleAccessory(device);
+    }
+
+    const removedAccessories = this.accessories.filter((accessory) => accessory.context.deviceInfo.modelCode === 'gasalarm01');
+    if (removedAccessories.length > 0) {
+      this.log.info('移除燃气报警器配件：该设备类型暂不支持');
+      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, removedAccessories);
+      for (const accessory of removedAccessories) {
+        this.accessories.splice(this.accessories.indexOf(accessory), 1);
+      }
     }
   }
 
@@ -73,6 +94,12 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
         return Light04;
       case 'conditioner02':
         return Conditioner02;
+      case 'curtain01':
+        return Curtain01;
+      case 'lock01':
+        return Lock01;
+      case 'waterimmersion01':
+        return WaterImmersion01;
       default:
         return null;
     }

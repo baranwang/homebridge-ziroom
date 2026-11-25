@@ -7,6 +7,8 @@ export abstract class BaseAccessory {
 
   private getDeviceDetailPromise: Promise<ZiroomDeviceInfo> | null = null;
 
+  private pollTimer: NodeJS.Timeout | undefined;
+
   constructor(
     public readonly platform: ZiroomHomebridgePlatform,
     readonly accessory: ZiroomPlatformAccessory,
@@ -56,7 +58,11 @@ export abstract class BaseAccessory {
     if (!deviceInfo) {
       throw new Error(`无法获取设备详情: ${this.deviceInfo.devUuid}`);
     }
-    const newDeviceInfo = { ...this.deviceInfo, ...deviceInfo };
+    const newDeviceInfo = {
+      ...this.deviceInfo,
+      ...deviceInfo,
+      devStateMap: { ...this.deviceInfo.devStateMap, ...deviceInfo.devStateMap },
+    };
     this.accessory.context.deviceInfo = newDeviceInfo;
     this.onDeviceInfoChange(newDeviceInfo);
     return newDeviceInfo;
@@ -96,6 +102,41 @@ export abstract class BaseAccessory {
   protected async getDeviceProps(prop: string) {
     await this.loadDeviceInfo();
     return this.getDevicePropsSync(prop);
+  }
+
+  protected startPolling(intervalMs: number, refresh: () => Promise<unknown> = () => this.loadDeviceInfo()) {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+    }
+    this.pollTimer = setInterval(() => {
+      void refresh().catch((error) => {
+        this.platform.log.warn('刷新设备状态失败', this.accessory.displayName, error);
+      });
+    }, intervalMs);
+    this.pollTimer.unref();
+  }
+
+  protected async loadDeviceInfoFromList() {
+    const deviceInfo = (await this.platform.request.getDeviceList()).find((device) => device.devUuid === this.deviceInfo.devUuid);
+    if (!deviceInfo) {
+      throw new Error(`设备列表中找不到设备: ${this.deviceInfo.devUuid}`);
+    }
+
+    const newDeviceInfo = {
+      ...this.deviceInfo,
+      ...deviceInfo,
+      // Device-list polling is authoritative for detector state. Ziroom omits
+      // device_description after an alarm is cleared; merging would preserve
+      // the old "报警" value indefinitely.
+      devStateMap: { ...deviceInfo.devStateMap },
+    };
+    this.accessory.context.deviceInfo = newDeviceInfo;
+    this.onDeviceInfoChange(newDeviceInfo);
+    return newDeviceInfo;
+  }
+
+  protected getDeviceStateSync(stateCode: string) {
+    return this.deviceInfo.devStateMap?.[stateCode];
   }
 
   protected async setDeviceProps(prop: string, value: string) {

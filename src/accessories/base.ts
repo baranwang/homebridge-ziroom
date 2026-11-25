@@ -125,7 +125,10 @@ export abstract class BaseAccessory {
     const newDeviceInfo = {
       ...this.deviceInfo,
       ...deviceInfo,
-      devStateMap: { ...this.deviceInfo.devStateMap, ...deviceInfo.devStateMap },
+      // Device-list polling is authoritative for detector state. Ziroom omits
+      // device_description after an alarm is cleared; merging would preserve
+      // the old "报警" value indefinitely.
+      devStateMap: { ...deviceInfo.devStateMap },
     };
     this.accessory.context.deviceInfo = newDeviceInfo;
     this.onDeviceInfoChange(newDeviceInfo);

@@ -10,7 +10,7 @@ export class GasAlarm01 extends BaseAccessory {
     leak.getCharacteristic(this.Characteristic.LeakDetected).onGet(this.getAlarmState.bind(this));
     leak.getCharacteristic(this.Characteristic.StatusFault).onGet(this.getFaultState.bind(this));
     this.updateValues();
-    this.startPolling(this.platform.getPollingIntervalMs('detectorPollIntervalMinutes', 2));
+    this.startPolling(this.platform.getPollingIntervalMs('detectorPollIntervalMinutes', 0.5, 0.5));
   }
 
   onDeviceInfoChange() {

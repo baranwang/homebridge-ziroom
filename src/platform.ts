@@ -13,9 +13,13 @@ export class ZiroomHomebridgePlatform implements DynamicPlatformPlugin {
 
   public readonly request: ZiroomRequest;
 
-  getPollingIntervalMs(configKey: 'detectorPollIntervalMinutes' | 'lockPollIntervalMinutes', defaultMinutes: number) {
+  getPollingIntervalMs(
+    configKey: 'detectorPollIntervalMinutes' | 'lockPollIntervalMinutes',
+    defaultMinutes: number,
+    minimumMinutes = 1,
+  ) {
     const configuredMinutes = Number(this.config[configKey]);
-    const minutes = Number.isFinite(configuredMinutes) && configuredMinutes >= 1 ? configuredMinutes : defaultMinutes;
+    const minutes = Number.isFinite(configuredMinutes) && configuredMinutes >= minimumMinutes ? configuredMinutes : defaultMinutes;
     return minutes * 60 * 1000;
   }
 

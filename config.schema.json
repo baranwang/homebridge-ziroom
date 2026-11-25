@@ -38,10 +38,10 @@
       },
       "detectorPollIntervalMinutes": {
         "title": "Detector Poll Interval (minutes)",
-        "type": "integer",
-        "minimum": 1,
-        "default": 2,
-        "description": "How often gas and water detectors refresh their state from Ziroom."
+        "type": "number",
+        "minimum": 0.5,
+        "default": 0.5,
+        "description": "How often gas and water detectors refresh their state from Ziroom (minimum 30 seconds)."
       },
       "lockPollIntervalMinutes": {
         "title": "Lock Battery Poll Interval (minutes)",

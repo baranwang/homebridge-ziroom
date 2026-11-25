@@ -1,6 +1,5 @@
 import { BaseAccessory } from './base';
 
-const LEAK_ALARM = 'E321V04022A_alarmed_change';
 const LOW_BATTERY = 'wsdl_low_battery_change';
 const BATTERY_LEVEL = 'E321V04022A_batterystate_state';
 
@@ -26,7 +25,7 @@ export class WaterImmersion01 extends BaseAccessory {
   getLeakDetected(): number {
     const alarm = this.getLeakAlarmState();
     if (alarm === undefined) {
-      throw new Error(`无法读取传感器状态: ${LEAK_ALARM}`);
+      throw new Error('无法读取传感器状态: device_description');
     }
     return alarm ? this.Characteristic.LeakDetected.LEAK_DETECTED : this.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
   }
@@ -61,10 +60,11 @@ export class WaterImmersion01 extends BaseAccessory {
     if (description === '干燥' || description === '正常' || description === '未报警' || description === '无报警') {
       return false;
     }
-
-    const alarm = this.getDeviceStateSync(LEAK_ALARM);
-    if (alarm === '0' || alarm === '1') {
-      return alarm === '1';
+    if (description === undefined) {
+      // `E321V04022A_alarmed_change` is not a reliable current-state flag:
+      // observed as 0 with description 报警, and 1 after clearing the alarm
+      // when the description was omitted from the device-list response.
+      return false;
     }
     return undefined;
   }

@@ -35,6 +35,20 @@
         "type": "string",
         "required": false,
         "description": "Your Ziroom hid."
+      },
+      "detectorPollIntervalMinutes": {
+        "title": "Detector Poll Interval (minutes)",
+        "type": "integer",
+        "minimum": 1,
+        "default": 2,
+        "description": "How often gas and water detectors refresh their state from Ziroom."
+      },
+      "lockPollIntervalMinutes": {
+        "title": "Lock Battery Poll Interval (minutes)",
+        "type": "integer",
+        "minimum": 1,
+        "default": 60,
+        "description": "How often the smart lock battery level refreshes from Ziroom."
       }
     }
   }

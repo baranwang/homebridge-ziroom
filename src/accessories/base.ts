@@ -7,6 +7,8 @@ export abstract class BaseAccessory {
 
   private getDeviceDetailPromise: Promise<ZiroomDeviceInfo> | null = null;
 
+  private pollTimer: NodeJS.Timeout | undefined;
+
   constructor(
     public readonly platform: ZiroomHomebridgePlatform,
     readonly accessory: ZiroomPlatformAccessory,
@@ -96,6 +98,22 @@ export abstract class BaseAccessory {
   protected async getDeviceProps(prop: string) {
     await this.loadDeviceInfo();
     return this.getDevicePropsSync(prop);
+  }
+
+  protected startPolling(intervalMs: number) {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+    }
+    this.pollTimer = setInterval(() => {
+      void this.loadDeviceInfo().catch((error) => {
+        this.platform.log.warn('刷新设备状态失败', this.accessory.displayName, error);
+      });
+    }, intervalMs);
+    this.pollTimer.unref();
+  }
+
+  protected getDeviceStateSync(stateCode: string) {
+    return this.deviceInfo.devStateMap?.[stateCode];
   }
 
   protected async setDeviceProps(prop: string, value: string) {
